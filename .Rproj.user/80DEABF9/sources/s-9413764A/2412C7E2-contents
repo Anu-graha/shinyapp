@@ -1,0 +1,40 @@
+library(shiny)
+library(leaflet)
+
+## Read data from file 
+
+setwd("C://Users//Anu//Documents//R//shinyapp")
+rawdata<-read.csv("data//housing.csv")
+
+##  Clean the data
+
+data_p1<-rawdata[complete.cases(rawdata),]
+min_population<-min(data_p1$population)
+max_population<-max(data_p1$population)
+min_income<-min(data_p1$median_income)
+max_income<-max(data_p1$median_income)
+area_pref<-unique(data_p1$ocean_proximity)
+min_lat<-min(data_p1$latitude)
+max_lat<-max(data_p1$latitude)
+min_lng<-min(data_p1$longitude)
+max_lng<-max(data_p1$longitude)
+
+# Define UI for application that draws a histogram
+shinyUI(fluidPage(
+
+    # Application title
+    titlePanel("California Housing Price (1990)"),
+
+    # Sidebar with a slider input for number of bins
+    sidebarLayout(
+        sidebarPanel(
+            textOutput(outputId = "Latitude", "Latitude"),
+            textOutput(outputId = "Longitude","Logitude")
+          ),
+
+        # Show a plot of the generated distribution
+        mainPanel(
+            leafletOutput("hPlot")
+        )
+    )
+))

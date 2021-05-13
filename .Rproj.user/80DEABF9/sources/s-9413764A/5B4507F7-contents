@@ -1,0 +1,34 @@
+library(shiny)
+library(caret)
+library(dplyr)
+library(leaflet)
+
+## Read data from file 
+
+setwd("C://Users//Anu//Documents//R//shinyapp")
+rawdata<-read.csv("data//housing.csv")
+
+##  Clean the data
+
+data_p1<-rawdata[complete.cases(rawdata),]
+
+## Pick selected columns
+
+newdata<- data_p1 %>% select(1,2,6,8,9,10)
+
+## Create model
+
+mdl<-train(median_house_value~.,data=newdata, method="lm")
+
+## Build a model to predict housing price based on other variables
+
+shinyServer(function(input, output) {
+        output$hPlot <- renderLeaflet({
+            p<-data.frame(latitude=input$latitude,longitude=input$longitude,population=input$population,median_income=input$income,ocean_proximity=input$areaPref)
+            pred<-predict(mdl,newdata = p)
+            np<-cbind(p,pred)
+            np %>% leaflet() %>% addTiles() %>% addMarkers(lng=~longitude,lat=~latitude, popup=paste("Median House Value: $",np$pred))
+    })
+        
+        
+})

@@ -1,0 +1,129 @@
+---
+title: "Practical Machine Learning"
+author: "Anugraha S"
+date: "5/4/2021"
+output:
+  md_document: github_document
+---
+
+## Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
+
+In this project, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.This info is recorded in the "classe" variable in training set.(classe - A, B, C, D, E; A -categorized as doing the exercise correctly and the rest of the classes indicate doing the exercise incorrectly)
+
+## About the data 
+
+Source of data: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+## Goals of the project
+
+The goal of this project is to predict the manner(classe) in which they exercise.Build a prediction model that minimizes the out of sample error, using cross-validation. Use this model to predict 20 test cases.
+
+First, I will pre-process the data to reduce the number of predictors. Then, I will be using randomForest method, with 3-fold cross validation training. Determine the accuracy and oob error of the model fit. If the metrics are satisfactory, use it to predict the test cases and determine the accuracy of the model.
+
+## Download data and read into memory
+
+```{r}
+#set working directory
+
+file_path<-paste(getwd(),"/",sep="")
+train.file<-file.path(file_path,"har_traindata.csv")
+test.file<-file.path(file_path, "har_testdata.csv")
+setwd(file_path)
+
+train_url<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+
+test_url<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+
+if(!file.exists(train.file)){
+    download.file(train_url, destfile=train.file)
+}
+
+if(!file.exists(test.file)){
+    download.file(test_url, destfile=test.file)
+}
+
+train.data<-read.csv(train.file, na.strings=c("NA","#DIV/0!",""))
+test.data<-read.csv(test.file, na.strings=c("NA","#DIV/0!",""))
+```
+
+## Explore the data
+
+```{r}
+dim(train.data)
+```
+
+The training data has 19622 observations and 160 variables.
+
+## load the libraries
+
+```{r results=FALSE, warning=FALSE}
+library(caret)
+library(ggplot2)
+library(dplyr)
+library(rpart)
+```
+
+## Preprocess training data
+
+```{r}
+#1. Eliminate columns that have mostly NA
+
+train.clean1<-train.data[,colSums(is.na(train.data))<20]
+test.clean1<-test.data[,colSums(is.na(test.data))<2]
+
+dim(train.clean1)
+dim(test.clean1) 
+
+#2. Eliminate descriptive columns 
+#The first 6 columns are descriptive and does not add any value to the model.
+
+train.clean2<-train.clean1[,-c(1:6)]
+test.clean2<-test.clean1[,-c(1:6)]
+
+dim(train.clean2)
+dim(test.clean2)
+
+train.clean2$classe<-as.factor(train.clean2$classe)
+```
+## Build model using 'random forest' method
+
+```{r warning=FALSE}
+library(parallel)
+library(doParallel)
+
+set.seed(100)
+
+cluster<-makeCluster(detectCores()-2)
+registerDoParallel(cluster)
+
+har_mdl<-train(classe~.,data=train.clean2, method="rf", trControl=trainControl(method="cv",number=3, allowParallel = TRUE))
+
+har_mdl
+```
+
+Accuracy is 0.997, which is very good!
+```{r}
+har_mdl$resample
+```
+We can see the 3 fold cross validation metrics here.
+```{r}
+har_mdl$finalModel
+```
+The out of sample error/out of bag error here is :0.15 which is good too.
+```{r}
+stopCluster(cluster)
+
+```
+## Model Performance on training set
+```{r}
+har_fit<-predict(har_mdl, newdata=train.clean2)
+confusionMatrix(train.clean2$classe,har_fit)
+```
+Prediction accuracy on training set is 1!
+
+## Model predictions for test set
+```{r}
+predict(har_mdl,newdata=test.clean2)
+```

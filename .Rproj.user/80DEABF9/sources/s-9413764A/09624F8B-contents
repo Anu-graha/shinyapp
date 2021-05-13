@@ -1,0 +1,63 @@
+---
+title: "Reproducible Pitch Presentation"
+author: "Anugraha S"
+date: "5/13/2021"
+output: 
+  ioslides_presentation:
+        smaller: TRUE
+---
+
+
+## Heart attack prediction
+
+Heart disease is a major cause for deaths around the world.But it is difficult to identify heart disease because of several contributory risk factors such as diabetes, high blood pressure, high cholesterol, abnormal pulse rate, and many other factors. 
+
+Predicting heart disease is hence regarded as an important subject in clinical data analysis. With the amount of clinical data available, we can apply machine learning algorithms to effectively predict the presence of heart disease based on the factors involved.
+
+The dataset has been taken from [here](https://www.kaggle.com/rashikrahmanpritom/heart-attack-analysis-prediction-dataset/discussion/234843)
+
+I have built an [app](https://anu-graha.shinyapps.io/heart/) that predicts if a person has heart disease or no based on the below variables (which is only a subset of variables in the dataset).
+
+The complete files for this project can be found in my [github](https://github.com/Anu-graha/shinyapp)
+
+## Dataset - Exploring the features
+
+The variables, I have considered are (mostly to simplify the app),
+
+- Age: displays the age of the individual.
+- Sex: displays the gender of the individual using the following format :
+ 1 = male
+ 0 = female
+- Chest-pain type: displays the type of chest-pain experienced by the individual using the following format :
+  * 1 = typical angina
+  * 2 = atypical angina
+  * 3 = non — anginal pain
+  * 4 = asymptotic
+- Diagnosis of heart disease : Displays whether the individual is suffering from heart disease or not :
+  * 0 = absence
+  * 1 = present.
+
+## Analysis of heart disease data
+
+```{r warning=FALSE,message=FALSE}
+library(plotly)
+library(dplyr)
+
+h<-read.csv("data//heart.csv")
+
+hmale<-h %>% filter(sex==1 & output==1) %>% select(age,output)
+hfemale<-h %>% filter(sex==0 & output==1) %>% select(age,output)
+
+fig<-plot_ly(alpha=0.6)
+fig<- fig %>% add_histogram(data=hfemale, x=~age, name="Female")
+fig<- fig %>% add_histogram(data=hmale, x=~age, name="Male")
+fig<- fig %>% layout(barmode="overlay")
+```
+
+## Gender vs Heart Disease
+
+We can see from this plot that Men are more likely to get a heart disease in their middle ages more than women.
+```{r}
+fig
+```
+

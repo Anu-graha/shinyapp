@@ -1,0 +1,57 @@
+library(shiny)
+
+## Read Data
+h<-read.csv("data//heart.csv")
+
+## Select subset of columns for our prediction model
+hs<-h[,c(1,2,3,5,14)]
+
+min_age<-min(hs$age)
+max_age<-max(hs$age)
+sex<-c("Male","Female")
+cp<-c("1 = typical angina", "2 = atypical angina", "3 = non-anginal pain", "0 = asymptomatic")
+min_chol<-min(hs$chol)
+max_chol<-max(hs$chol)
+
+# Define UI for application 
+shinyUI(fluidPage(
+
+    # Application title
+    titlePanel("Chances of getting a heart attack"),
+
+    # Sidebar with a slider input for number of bins
+    sidebarLayout(
+        sidebarPanel(
+            helpText("Please set the below parameters and click on Check button to see the prediction value"),
+            sliderInput("age",
+                        "Age",
+                        min = min_age,
+                        max = max_age,
+                        value = min_age,
+                        step=5),
+            checkboxInput("sexMale",
+                          "Male",
+                           value=TRUE),
+            checkboxInput("sexFemale",
+                          "Female",
+                          value=FALSE),
+            selectInput("cp",
+                        "Chest Pain Type",
+                        choices = cp),
+            sliderInput("chol",
+                        "Cholesterol Level",
+                        min=min_chol,max=max_chol,
+                        value=56,step=1),
+            actionButton("check","Check Now")
+        ),
+
+        # Show a plot of the generated distribution
+        mainPanel(
+            date(),
+            a("Data sourced from Kaggle",href="https://www.kaggle.com/rashikrahmanpritom/heart-attack-analysis-prediction-dataset"),
+            verbatimTextOutput("op"),
+            
+            
+        )
+    )
+))

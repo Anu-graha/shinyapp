@@ -1,0 +1,43 @@
+library(shiny)
+library(dplyr)
+library(plotly)
+library(caret)
+library(randomForest)
+library(e1071)
+
+## Read Data
+h<-read.csv("data//heart.csv")
+
+## Select subset of columns for our prediction model
+hs<-h[,c(1,2,3,5,14)]
+
+hs$output<-as.factor(hs$output)
+
+## Build Model
+hmdl<-train(output~.,data=hs,method="rf")
+
+
+shinyServer(function(input, output,session) {
+    
+    observeEvent(input$check,{
+    
+    iage<-reactive({as.numeric(input$age)})
+    isex<-reactive({as.numeric(ifelse(input$sexMale,1,0))})
+    icp<-reactive({as.numeric(substr(input$cp,1,1))})
+    ichol<-reactive({as.numeric(input$chol)})
+
+    in_v<-reactive({cbind(age=iage(),sex=isex(),cp=icp(),chol=ichol())})
+    p<-reactive({predict(hmdl,newdata = in_v())})
+    
+    output$op <- renderText({ paste("Chances of heart attack for a person",
+                                     "Aged" ,iage(),
+                                     "Gender",isex(),
+                                     "Chest Pain type",input$cp,
+                                     "cholesterol level",ichol(),
+                                     "is ",p(),sep="\n") })
+    
+    
+    })
+    })
+
+
